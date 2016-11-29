@@ -9,6 +9,10 @@ class MessageToServoCommandTranslator
     @sensor_vals = {"servo1-angle"=>0, "servo1-speed"=>1, "servo0-angle"=>0, "servo0-speed"=>1}
   end
 
+  def var_update (var_name, var_val)
+    @sensor_vals[var_name] = var_val
+  end
+
   def translate(message)
     commands = []
 

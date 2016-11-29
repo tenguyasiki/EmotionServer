@@ -16,7 +16,7 @@ class MessageHandler
     when "sensor-update"
       #scratch variable change
       #put the var-> val mapping in to translator
-      @translator.sensor_vals[message[1]] = message[2]
+      @translator.var_update(message[1], message[2])
     end
   end
 
