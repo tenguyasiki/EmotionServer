@@ -1,16 +1,17 @@
 require "./servo-command.rb"
 
 class MessageToServoCommandTranslator
+  attr_accessor :sensor_vals
   @default_speed = nil
 
   def initialize
     @default_speed = 10
-    
+    @sensor_vals = {"servo1-angle"=>0, "servo1-speed"=>1, "servo0-angle"=>0, "servo0-speed"=>1}
   end
-  
+
   def translate(message)
     commands = []
-    
+
     case message
     when "なおる"
       commands.push(ServoCommand.new(0, 1, 90, @default_speed))
@@ -30,9 +31,13 @@ class MessageToServoCommandTranslator
     when "よろこぶ"
       commands.push(ServoCommand.new(0, 1, 160, @default_speed + 40))
       commands.push(ServoCommand.new(0, 0, 120, @default_speed + 40))
+    when "サーボをうごかす"
+      puts @sensor_vals
+      commands.push(ServoCommand.new(0, 1, @sensor_vals["servo1-angle"].to_i, @sensor_vals["servo1-speed"].to_i))
+      commands.push(ServoCommand.new(0, 0, @sensor_vals["servo0-angle"].to_i, @sensor_vals["servo0-speed"].to_i))
     end
-    
+
     return commands
   end
-  
+
 end
