@@ -8,7 +8,7 @@ class RemoteSensorsProtocolParser
     message = message[4..message.size]
     messages = Array.new
 
-    tokens = message.split
+    tokens = message.split(/\s+|\n+|\$|\!/)
 
     until tokens.empty? do
       type = tokens.shift
@@ -22,7 +22,13 @@ class RemoteSensorsProtocolParser
                          tokens.shift.force_encoding("utf-8")]
         end
       else
-        puts "ILLEGAL COMMAND"
+        # 謎の文字がトークンに混入することがある
+        print "WARNING unable to process: type(#{type}) tokens("
+        tokens.each do |x|
+          print "[#{x}] "
+        end
+        puts "). Ignore and continue."
+        next
       end
     end
 
