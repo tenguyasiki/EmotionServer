@@ -14,7 +14,6 @@ class ServoCommandExecuter
       @arduinos[index] = ArduinoFirmata.connect(port)
     }
     @servo_pins = [SERVO_PIN_0, SERVO_PIN_1]
-    @servo_last_angle = [90, 90]
   end
 
   def execute(commands)
@@ -41,7 +40,6 @@ class ServoCommandExecuter
     # ここに届くcommandsは 引数のarduinoを対象としたものだけという前提とする
     def inner_sysex_execute(arduino, commands)
       params = Array.new
-      wait_time = 0
 
       params.push(commands.size)
       commands.each do |command|
@@ -54,19 +52,12 @@ class ServoCommandExecuter
         params.push(speed)
 
         puts "aruduino_id:#{command.arduino_id}, servo_pin:#{servo_pin}, angle:#{angle}, speed:#{speed}"
-
-        rotate_angle = (angle - @servo_last_angle[command.servo_id]).abs
-        wait_time = wait_time + ((255 - speed + rotate_angle)  / 100.to_f)
-
-        @servo_last_angle[command.servo_id] = angle
       end
+
 
       puts "params:#{params}"
       ## #define SYSEX_VARSPEED_SERVO  0x02
       arduino.sysex 0x02, params
-
-      puts "wait sec: #{wait_time}"
-      #sleep(wait_time)
     end
 
 end

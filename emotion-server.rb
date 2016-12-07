@@ -1,3 +1,4 @@
+require "thread"
 require "socket"
 require "./remote-sensors-protocol-parser.rb"
 require "./message-handler.rb"
@@ -14,19 +15,29 @@ class EmotionServer
     @socket = TCPSocket.open("localhost", TCP_PORT_NO)
     @parser = RemoteSensorsProtocolParser.new()
     @message_handler = MessageHandler.new(@arduino_serial_ports)
+    @message_queue = Queue.new
 
     puts("ready.")
+
+    #sleepしてもメッセージを取りこぼさないようにスレッドを導入
+    Thread.start do
+      loop do
+        @message_queue.pop.call
+      end
+    end
+
     loop do
       # 十分な長さのメッセージを読み取る
-      remote_sensors_message = @socket.recv(400)
+      message = @socket.recv(400);
+      @message_queue.push Proc.new {
+        messages = @parser.parse(message)
 
-      messages = @parser.parse(remote_sensors_message)
-
-      messages.each do |msg|
-        send_sensor_update_message("msg", "run")
-        @message_handler.handle(msg)
-        send_sensor_update_message("msg","return")
-      end
+        messages.each do |msg|
+          send_sensor_update_message("msg", "run")
+          @message_handler.handle(msg)
+          send_sensor_update_message("msg","return")
+        end
+      }
     end
   end
 
