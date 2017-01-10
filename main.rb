@@ -1,6 +1,5 @@
 require "./emotion-server.rb"
 require 'rbconfig'
-require 'win32ole'
 
 DEFAULT_ARDUINO_SERIAL_PORTS = ["COM3"]
 
@@ -23,22 +22,39 @@ def os
   )
 end
 
-def usage
-  puts "# ruby main.rb [serialport]"
-
+def getComportList
   ostype = os()
   comlist = {}
   
   if ostype == :windows then
     comlist = comlist_windows()
+  elsif ostype == :linux then
+    comlist = comlist_linux()
   end
-
-  puts ostype
-  puts comlist
   
+  return comlist
 end
 
+def usage
+  puts "# ruby main.rb [serialport]"
+
+  comlist = getComportList()
+  comlist.each_with_index do | dev, index |
+    puts "[#{index}] #{dev}"
+  end
+end
+
+# linux環境でシリアルポートを一覧する
+def comlist_linux
+  comlist = Dir.glob("/dev/ttyUSB*")
+  comlist.concat(Dir.glob("/dev/ttyACM*"))
+  return comlist
+end
+
+
+# Windows環境でシリアルポートを一覧する
 def comlist_windows
+  require 'win32ole'
   locator = WIN32OLE.new("WbemScripting.SWbemLocator")
   services = locator.ConnectServer()
   comlist = {}
@@ -52,7 +68,7 @@ def comlist_windows
     comlist[$1] = item.Description if item.Name =~ /\((COM\d+)\)/
   end
   
-  return comlist
+  return comlist.keys
 end
 
 
@@ -60,9 +76,23 @@ begin
   if ARGV.size == 0 then
     usage()
     exit
+  else
+    argv = ARGV[0]
+    if argv =~ /^\d+$/ then  # シリアルポート指定が数値の場合
+      comlist = getComportList()
+      index = argv.to_i
+      if index < comlist.size then
+        arduino_serial_ports = comlist[index]
+      else
+        raise "illegular argument [#{argv}]"
+      end
+    else   #シリアルポート指定が文字列の場合
+      arduino_serial_ports = ARGV[0]
+    end
   end
   
-  arduino_serial_ports = ARGV.size > 0 ? ARGV : DEFAULT_ARDUINO_SERIAL_PORTS
+  puts arduino_serial_ports
+  exit
   server = EmotionServer.new(arduino_serial_ports)
   server.start()
 rescue => ex
