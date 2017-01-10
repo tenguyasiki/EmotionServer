@@ -36,7 +36,10 @@ def getComportList
 end
 
 def usage
-  puts "# ruby main.rb [serialport]"
+  puts "usage : $ ruby main.rb [serialport(number or string)]"
+  puts "\nex. $ ruby main.rb 0"
+  puts "    $ ruby main.rb /dev/ttyUSB01"
+  puts "\nlist up COM port identifiers..."
 
   comlist = getComportList()
   comlist.each_with_index do | dev, index |
@@ -78,21 +81,22 @@ begin
     exit
   else
     argv = ARGV[0]
+    arduino_serial_ports = []
     if argv =~ /^\d+$/ then  # シリアルポート指定が数値の場合
       comlist = getComportList()
       index = argv.to_i
       if index < comlist.size then
-        arduino_serial_ports = comlist[index]
+        arduino_serial_ports[0] = comlist[index]
       else
         raise "illegular argument [#{argv}]"
       end
     else   #シリアルポート指定が文字列の場合
-      arduino_serial_ports = ARGV[0]
+      arduino_serial_ports[0] = ARGV[0]
     end
   end
   
-  puts arduino_serial_ports
-  exit
+  puts "[#{arduino_serial_ports[0]}] connecting..."
+
   server = EmotionServer.new(arduino_serial_ports)
   server.start()
 rescue => ex
