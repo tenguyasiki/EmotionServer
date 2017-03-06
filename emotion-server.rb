@@ -45,6 +45,7 @@ class EmotionServer
 
     def send_sensor_update_message(key, value)
       message = sprintf("sensor-update \"%s\" \"%s\"", key, value)
+      printf("sensor-update \"%s\" \"%s\"\n", key, value)
       send_message(message)
     end
 
