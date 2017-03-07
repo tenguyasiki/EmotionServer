@@ -1,6 +1,8 @@
 require "./message-to-servo-command-translator.rb"
 require "./servo-command-executer.rb"
 
+require 'pry'
+
 class MessageHandler
 
   def initialize(arduino_serial_ports)
@@ -9,6 +11,8 @@ class MessageHandler
   end
 
   def handle(message)
+    puts "handle [#{message}]\n"
+    
     case message[0]
     when "broadcast"
       commands = @translator.translate(message[1])
@@ -18,6 +22,7 @@ class MessageHandler
       #put the var-> val mapping in to translator
       @translator.var_update(message[1], message[2])
     end
+    
   end
 
 end

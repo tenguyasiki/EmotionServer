@@ -42,9 +42,14 @@ def usage
   puts "\nlist up COM port identifiers..."
 
   comlist = getComportList()
-  comlist.each_with_index do | dev, index |
-    puts "[#{index}] #{dev}"
+  if comlist.size > 0 then
+    comlist.each_with_index do | dev, index |
+      puts "[#{index}] #{dev}"
+    end
+  else
+    puts "could not find any COM port.\n"
   end
+  
 end
 
 # linux環境でシリアルポートを一覧する
@@ -100,7 +105,6 @@ begin
   server = EmotionServer.new(arduino_serial_ports)
   server.start()
 rescue => ex
-  puts ex.message
-  puts ex.backtrace
+  puts "Please start the Remote Sensor Connection on Scratch.\n"
 end
 

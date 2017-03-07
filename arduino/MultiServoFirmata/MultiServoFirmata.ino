@@ -73,6 +73,17 @@ unsigned int samplingInterval = 19; // how often to run the main loop (in ms)
 VarSpeedServo myservo1, myservo2;    // インスタンス作成
 VarSpeedServo myservos[] = {myservo1, myservo2};
 
+/*
+ *  アノードコモンのマルチカラーLEDを点灯する
+ *  赤の足を330Ω  橙橙茶金
+    青の足を470Ω  黄紫茶金
+    緑の足を220Ω  赤赤茶金
+ */
+#define LED_PIN_R 5
+#define LED_PIN_G 7
+#define LED_PIN_B 6
+
+
 /* i2c data */
 struct i2c_device_info {
   byte addr;
@@ -117,6 +128,17 @@ byte wireRead(void)
 #else
   return Wire.receive();
 #endif
+}
+
+/* r,g,b = 0~255 */
+void lightup(byte r, byte g, byte b){
+  analogWrite(LED_PIN_R, r);
+  analogWrite(LED_PIN_G, g);
+  analogWrite(LED_PIN_B, b);
+}
+
+void lightdown(){
+  lightup(255, 255, 255);
 }
 
 /*==============================================================================
@@ -503,6 +525,26 @@ void sysexCallback(byte command, byte argc, byte *argv)
 
       Firmata.sendSysex(command, argc, argv); // callback
       break;
+    /* Blink multicolor LED  */
+    case 0x03:
+      if(argc < 4) break;
+
+      byte msec;
+      byte red;
+      byte green;
+      byte blue;
+
+      msec  = argv[0];
+      red   = argv[1] * 255/100;
+      green = argv[2] * 255/100;
+      blue  = argv[3] * 255/100;
+
+      lightup(red, green, blue);
+      delay(msec * 1000);
+      lightdown();
+
+      Firmata.sendSysex(command, argc, argv); // callback
+      break;
     case I2C_REQUEST:
       mode = argv[1] & I2C_READ_WRITE_MODE_MASK;
       if (argv[1] & I2C_10BIT_ADDRESS_MODE_MASK) {
@@ -795,6 +837,18 @@ void systemResetCallback()
 
 void setup()
 {
+  // put your setup code here, to run once:
+  pinMode(LED_PIN_R, OUTPUT);
+  pinMode(LED_PIN_G, OUTPUT);
+  pinMode(LED_PIN_B, OUTPUT);
+  lightup(255, 0, 0);
+  delay(500);
+  lightup(0, 255, 0);
+  delay(500);
+  lightup(0, 0, 255);
+  delay(500);
+  lightdown();
+
   Firmata.setFirmwareVersion(FIRMATA_FIRMWARE_MAJOR_VERSION, FIRMATA_FIRMWARE_MINOR_VERSION);
 
   Firmata.attach(ANALOG_MESSAGE, analogWriteCallback);
